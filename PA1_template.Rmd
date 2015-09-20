@@ -18,19 +18,24 @@ head(activity_data_raw)
 nrow(activity_data_raw)
 ```
 ### Preprocessing 
-*activity_data* data frame is created by removing rows with NA values (can be verfied by comparing the output of *nrow* function)
+For later use *activity_data_without_na* data frame is created by removing rows with NA values (can be verfied by comparing the output of *nrow* function)
 ```{r}
-activity_data <- na.omit(activity_data_raw)
-head(activity_data)
-nrow(activity_data)
+activity_data_without_na <- na.omit(activity_data_raw)
+head(activity_data_without_na)
+nrow(activity_data_without_na)
 ```
-Another data frame *activity_per_day* is created by using *aggregate* function to sum up  total steps taken each day 
+
+## 2. What is mean total number of steps taken per day?
+The total number of steps for each day is calculated by creating data frame *activity_per_day* ,by using *aggregate* function to sum up total steps taken each day 
 ```{r}
 activity_per_day <- aggregate(steps ~ date, data = activity_data_raw, FUN = sum)
 head(activity_per_day)
 ```
+The histogram showing total number of steps each day has been created using *hist* plotting function
+```{r}
+hist(activity_per_day$steps, xlab = "The total num. of steps per day", main = NULL, col = "green")
+```
 
-## 2. What is mean total number of steps taken per day?
 The mean is calculated using R's *mean* function
 ```{r}
 mean(activity_per_day$steps)
