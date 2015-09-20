@@ -7,22 +7,45 @@ output:
 
 
 ## 1. Loading and preprocessing the data 
+### Pre-requisite
 Data file *activity.csv* (uncompressed version of the *[activity.zip](https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip)*) has to be preset in the working folder. 
+
+### Loading 
+Data is loaded into *activity_data_raw* data frame.
 ```{r}
-data <- read.csv('activity.csv')
-head(data)
+activity_data_raw <- read.csv('activity.csv')
+head(activity_data_raw)
+nrow(activity_data_raw)
+```
+### Preprocessing 
+*activity_data* data frame is created by removing rows with NA values (can be verfied by comparing the output of *nrow* function)
+```{r}
+activity_data <- na.omit(activity_data_raw)
+head(activity_data)
+nrow(activity_data)
+```
+Another data frame *activity_per_day* is created by using *aggregate* function to sum up  total steps taken each day 
+```{r}
+activity_per_day <- aggregate(steps ~ date, data = activity_data_raw, FUN = sum)
+head(activity_per_day)
 ```
 
-## What is mean total number of steps taken per day?
+## 2. What is mean total number of steps taken per day?
+The mean is calculated using R's *mean* function
+```{r}
+mean(activity_per_day$steps)
+```
+The median is calculated using R's *median* function
+```{r}
+median(activity_per_day$steps)
+```
+
+## 3. What is the average daily activity pattern?
 
 
 
-## What is the average daily activity pattern?
+## 4. Imputing missing values
 
 
 
-## Imputing missing values
-
-
-
-## Are there differences in activity patterns between weekdays and weekends?
+## 5. Are there differences in activity patterns between weekdays and weekends?
