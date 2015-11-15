@@ -4,7 +4,7 @@
 ### Pre-requisite
 Data file *activity.csv* (uncompressed version of the *[activity.zip](https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip)*) has to be preset in the working folder. 
 
-Library dplyr has been loaded
+Libraries *dplyr* and *lattice* have been loaded
 
 
 ### Loading 
@@ -28,7 +28,6 @@ library(dplyr)
 ```
 
 ```r
-library(ggplot2)
 library(lattice)
 activity <- read.csv('activity.csv')
 head(activity)
@@ -53,11 +52,11 @@ nrow(activity)
 ```
 
 ## 2. What is mean total number of steps taken per day?
-The total number of steps for each day is calculated by creating data frame *activity_per_day* ,by using *aggregate* function to sum up total steps taken each day 
+The total number of steps for each day is calculated by creating data frame *activity_by_day* ,utilizing *aggregate* function to sum up total steps taken each day 
 
 ```r
-activity_per_day <- aggregate(steps ~ date, data = activity, FUN = sum, na.rm = TRUE)
-head(activity_per_day)
+activity_by_day <- aggregate(steps ~ date, data = activity, FUN = sum, na.rm = TRUE)
+head(activity_by_day)
 ```
 
 ```
@@ -72,7 +71,7 @@ head(activity_per_day)
 The histogram showing total number of steps each day has been created using *hist* plotting function
 
 ```r
-hist(activity_per_day$steps, main = "The total number of steps per day", xlab = "Number of steps", col = "green")
+hist(activity_by_day$steps, main = "The total number of steps per day", xlab = "Number of steps", col = "green")
 ```
 
 ![](PA1_template_files/figure-html/unnamed-chunk-3-1.png) 
@@ -80,7 +79,7 @@ hist(activity_per_day$steps, main = "The total number of steps per day", xlab = 
 The mean is calculated using R's *mean* function
 
 ```r
-mean(activity_per_day$steps)
+mean(activity_by_day$steps)
 ```
 
 ```
@@ -89,7 +88,7 @@ mean(activity_per_day$steps)
 The median is calculated using R's *median* function
 
 ```r
-median(activity_per_day$steps)
+median(activity_by_day$steps)
 ```
 
 ```
@@ -101,10 +100,10 @@ median(activity_per_day$steps)
 To show the average daily activity pattern, we make a time series plot of the 5-minute interval and the average number of steps taken, averaged across all days
 
 ```r
-activity_per_interval <- aggregate(steps ~ interval, data = activity, FUN = mean)
+activity_by_interval <- aggregate(steps ~ interval, data = activity, FUN = mean)
 
-plot(x = activity_per_interval$interval,
-     y = activity_per_interval$steps, 
+plot(x = activity_by_interval$interval,
+     y = activity_by_interval$steps, 
      type = "l",
      main = "Average Daily Activity Pattern",
      xlab = "Interval (mins)",
@@ -116,7 +115,7 @@ plot(x = activity_per_interval$interval,
 Next, we find out which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps
 
 ```r
-max_avg_daily_activity = activity_per_interval[which.max(activity_per_interval$steps),]
+max_avg_daily_activity = activity_by_interval[which.max(activity_by_interval$steps),]
 max_avg_daily_activity$interval
 ```
 
@@ -147,15 +146,15 @@ activity_filled <- merge(activity_filled, avg_activity_by_interval, by="interval
 nas <- is.na(activity_filled$steps)
 activity_filled$steps[nas] <- activity_filled$steps.by_interval[nas]
 activity_filled <- activity_filled[, c(1:3)]
-steps_per_day <- aggregate(steps ~ date, data = activity_filled, FUN = sum)
+steps_by_day <- aggregate(steps ~ date, data = activity_filled, FUN = sum)
 
-hist(steps_per_day$steps,breaks=20,labels=unique(steps_per_day$steps[order(steps_per_day$steps)]),main="Histogram of steps by day after Imputing",xlab="Steps")
+hist(steps_by_day$steps,breaks=20,labels=unique(steps_by_day$steps[order(steps_by_day$steps)]),main="Histogram of steps by day after Imputing",xlab="Steps")
 ```
 
 ![](PA1_template_files/figure-html/unnamed-chunk-9-1.png) 
 
 ```r
-mean(steps_per_day$steps)
+mean(steps_by_day$steps)
 ```
 
 ```
@@ -163,7 +162,7 @@ mean(steps_per_day$steps)
 ```
 
 ```r
-median(steps_per_day$steps)
+median(steps_by_day$steps)
 ```
 
 ```
@@ -195,4 +194,5 @@ xyplot(
 ```
 
 ![](PA1_template_files/figure-html/unnamed-chunk-10-1.png) 
+
 There are differences in the activity pattern between weekday and weekend.
