@@ -1,16 +1,37 @@
 # Reproducible Research: Peer Assessment 1
 
-
 ## 1. Loading and preprocessing the data 
 ### Pre-requisite
 Data file *activity.csv* (uncompressed version of the *[activity.zip](https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip)*) has to be preset in the working folder. 
 
+Library dplyr has been loaded
+
+
 ### Loading 
-Data is loaded into *activity_data_raw* data frame.
+Data is loaded into *activity* data frame.
 
 ```r
-activity_data_raw <- read.csv('activity.csv')
-head(activity_data_raw)
+library(dplyr)
+```
+
+```
+## 
+## Attaching package: 'dplyr'
+## 
+## The following objects are masked from 'package:stats':
+## 
+##     filter, lag
+## 
+## The following objects are masked from 'package:base':
+## 
+##     intersect, setdiff, setequal, union
+```
+
+```r
+library(ggplot2)
+library(lattice)
+activity <- read.csv('activity.csv')
+head(activity)
 ```
 
 ```
@@ -24,43 +45,18 @@ head(activity_data_raw)
 ```
 
 ```r
-nrow(activity_data_raw)
+nrow(activity)
 ```
 
 ```
 ## [1] 17568
-```
-### Preprocessing 
-For later use *activity_data_without_na* data frame is created by removing rows with NA values (can be verfied by comparing the output of *nrow* function)
-
-```r
-activity_data_without_na <- na.omit(activity_data_raw)
-head(activity_data_without_na)
-```
-
-```
-##     steps       date interval
-## 289     0 2012-10-02        0
-## 290     0 2012-10-02        5
-## 291     0 2012-10-02       10
-## 292     0 2012-10-02       15
-## 293     0 2012-10-02       20
-## 294     0 2012-10-02       25
-```
-
-```r
-nrow(activity_data_without_na)
-```
-
-```
-## [1] 15264
 ```
 
 ## 2. What is mean total number of steps taken per day?
 The total number of steps for each day is calculated by creating data frame *activity_per_day* ,by using *aggregate* function to sum up total steps taken each day 
 
 ```r
-activity_per_day <- aggregate(steps ~ date, data = activity_data_raw, FUN = sum)
+activity_per_day <- aggregate(steps ~ date, data = activity, FUN = sum, na.rm = TRUE)
 head(activity_per_day)
 ```
 
@@ -76,10 +72,10 @@ head(activity_per_day)
 The histogram showing total number of steps each day has been created using *hist* plotting function
 
 ```r
-hist(activity_per_day$steps, xlab = "The total num. of steps per day", main = NULL, col = "green")
+hist(activity_per_day$steps, main = "The total number of steps per day", xlab = "Number of steps", col = "green")
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-4-1.png) 
+![](PA1_template_files/figure-html/unnamed-chunk-3-1.png) 
 
 The mean is calculated using R's *mean* function
 
@@ -102,10 +98,101 @@ median(activity_per_day$steps)
 
 ## 3. What is the average daily activity pattern?
 
+To show the average daily activity pattern, we make a time series plot of the 5-minute interval and the average number of steps taken, averaged across all days
 
+```r
+activity_per_interval <- aggregate(steps ~ interval, data = activity, FUN = mean)
+
+plot(x = activity_per_interval$interval,
+     y = activity_per_interval$steps, 
+     type = "l",
+     main = "Average Daily Activity Pattern",
+     xlab = "Interval (mins)",
+     ylab = "Number of Steps")
+```
+
+![](PA1_template_files/figure-html/unnamed-chunk-6-1.png) 
+
+Next, we find out which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps
+
+```r
+max_avg_daily_activity = activity_per_interval[which.max(activity_per_interval$steps),]
+max_avg_daily_activity$interval
+```
+
+```
+## [1] 835
+```
+
+We have found that interval 835 has the highest average number of steps
 
 ## 4. Imputing missing values
 
+The total number of missing values in the dataset (i.e. the total number of rows with NAs) is found to be 2304, by executing the following command:
 
+```r
+nrow(activity[is.na(activity$steps),])
+```
+
+```
+## [1] 2304
+```
+
+The strategy to replace the missing values is to replace them with the mean number of steps taken from the corresponding interval. 
+
+```r
+activity_filled <- activity
+avg_activity_by_interval <- aggregate(steps ~ interval, data = activity_filled, FUN = mean, rm.na = TRUE)
+activity_filled <- merge(activity_filled, avg_activity_by_interval, by="interval", suffixes=c("",".by_interval"))
+nas <- is.na(activity_filled$steps)
+activity_filled$steps[nas] <- activity_filled$steps.by_interval[nas]
+activity_filled <- activity_filled[, c(1:3)]
+steps_per_day <- aggregate(steps ~ date, data = activity_filled, FUN = sum)
+
+hist(steps_per_day$steps,breaks=20,labels=unique(steps_per_day$steps[order(steps_per_day$steps)]),main="Histogram of steps by day after Imputing",xlab="Steps")
+```
+
+![](PA1_template_files/figure-html/unnamed-chunk-9-1.png) 
+
+```r
+mean(steps_per_day$steps)
+```
+
+```
+## [1] 10766.19
+```
+
+```r
+median(steps_per_day$steps)
+```
+
+```
+## [1] 10766.19
+```
+There does not appear to be the significant difference in te mean and median values. However, the histogram is showing that maxium frequency and distribution of data is different.
 
 ## 5. Are there differences in activity patterns between weekdays and weekends?
+
+```r
+# Get day from date
+activity_filled$day <- weekdays(as.Date(activity_filled$date))
+activity_filled$daytype <- factor(activity_filled$day)
+levels(activity_filled$daytype) <- list(
+  weekday = c("Monday","Tuesday","Wednesday","Thursday","Friday"),
+  weekend = c("Saturday","Sunday")
+)
+
+avg_steps_weekdays_vs_weekends <- aggregate(steps ~ daytype + interval, activity_filled, mean)
+
+xyplot(
+  type = "l",
+  data = avg_steps_weekdays_vs_weekends,
+  steps ~ interval | daytype,
+  xlab = "Interval",
+  ylab = "Number of steps",
+  layout = c(1,2)
+)
+```
+
+![](PA1_template_files/figure-html/unnamed-chunk-10-1.png) 
+There are differences in the activity pattern between weekday and weekend.
